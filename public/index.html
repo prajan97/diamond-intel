@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diamond Intel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: #0a0f14; color: #e4e7eb; -webkit-font-smoothing: antialiased; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // API
+    const api = {
+      get: async (endpoint) => { const res = await fetch(`/api${endpoint}`); return res.json(); },
+      post: async (endpoint, data) => { const res = await fetch(`/api${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); return res.json(); },
+      put: async (endpoint, data) => { const res = await fetch(`/api${endpoint}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); return res.json(); },
+      delete: async (endpoint) => { const res = await fetch(`/api${endpoint}`, { method: 'DELETE' }); return res.json(); },
+    };
+
+    // Constants
+    const SHAPES = ['Round', 'Oval', 'Princess', 'Emerald', 'Cushion', 'Pear', 'Marquise', 'Radiant', 'Asscher', 'Heart'];
+    const COLORS = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+    const CLARITIES = ['FL', 'IF', 'VVS1', 'VVS2', 'VS1', 'VS2', 'SI1', 'SI2', 'I1', 'I2'];
+    const CUTS = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor'];
+    const CERTIFICATIONS = ['GIA', 'IGI', 'AGS', 'HRD', 'EGL', 'GCAL', 'Other'];
+    const STATUSES = ['Available', 'Reserved', 'Sold'];
+    const CONTACT_TYPES = ['Buyer', 'Supplier', 'Both'];
+
+    // Colors
+    const colors = {
+      bg: '#0a0f14', bgCard: '#0f1419', border: 'rgba(255,255,255,0.08)', borderLight: 'rgba(255,255,255,0.12)',
+      text: '#e4e7eb', textMuted: '#8b95a5', accent: '#00d4aa', accentDim: 'rgba(0, 212, 170, 0.15)',
+      warning: '#fbbf24', warningDim: 'rgba(251, 191, 36, 0.15)', danger: '#ef4444', dangerDim: 'rgba(239, 68, 68, 0.15)',
+      info: '#3b82f6', infoDim: 'rgba(59, 130, 246, 0.15)',
+    };
+
+    const statusColors = {
+      Available: { bg: colors.accentDim, text: colors.accent }, Reserved: { bg: colors.warningDim, text: colors.warning },
+      Sold: { bg: 'rgba(139,149,165,0.15)', text: colors.textMuted }, Pending: { bg: colors.infoDim, text: colors.info },
+      Negotiating: { bg: colors.warningDim, text: colors.warning }, Agreed: { bg: colors.accentDim, text: colors.accent },
+      Completed: { bg: colors.accentDim, text: colors.accent }, Lost: { bg: colors.dangerDim, text: colors.danger },
+      Buyer: { bg: colors.accentDim, text: colors.accent }, Supplier: { bg: colors.infoDim, text: colors.info },
+      Both: { bg: colors.warningDim, text: colors.warning },
+    };
+
+    // Styles
+    const styles = {
+      container: { display: 'flex', minHeight: '100vh', background: colors.bg, fontFamily: "'Outfit', sans-serif" },
+      sidebar: { width: '240px', background: colors.bgCard, borderRight: `1px solid ${colors.border}`, padding: '24px 0', position: 'fixed', height: '100vh', overflowY: 'auto' },
+      logo: { padding: '0 24px 32px', fontSize: '22px', fontWeight: '700', color: colors.text, display: 'flex', alignItems: 'center', gap: '10px' },
+      logoAccent: { color: colors.accent },
+      nav: { display: 'flex', flexDirection: 'column', gap: '4px', padding: '0 12px' },
+      navItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s', color: colors.textMuted, fontSize: '14px', fontWeight: '500', border: 'none', background: 'transparent', width: '100%', textAlign: 'left' },
+      navItemActive: { background: colors.accentDim, color: colors.accent },
+      main: { flex: 1, marginLeft: '240px', padding: '32px', minHeight: '100vh' },
+      header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' },
+      pageTitle: { fontSize: '28px', fontWeight: '700', color: colors.text },
+      card: { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' },
+      cardTitle: { fontSize: '16px', fontWeight: '600', color: colors.text, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' },
+      grid4: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' },
+      grid3: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' },
+      grid2: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' },
+      statCard: { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px' },
+      statLabel: { fontSize: '12px', fontWeight: '500', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' },
+      statValue: { fontSize: '28px', fontWeight: '700', color: colors.text, fontFamily: "'JetBrains Mono', monospace" },
+      statSub: { fontSize: '13px', color: colors.textMuted, marginTop: '4px' },
+      table: { width: '100%', borderCollapse: 'collapse' },
+      th: { textAlign: 'left', padding: '12px 16px', fontSize: '11px', fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.border}` },
+      td: { padding: '14px 16px', fontSize: '14px', color: colors.text, borderBottom: `1px solid ${colors.border}` },
+      badge: { display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' },
+      button: { display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', border: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'Outfit', sans-serif" },
+      buttonPrimary: { background: colors.accent, color: colors.bg },
+      buttonSecondary: { background: 'transparent', border: `1px solid ${colors.borderLight}`, color: colors.text },
+      buttonDanger: { background: colors.dangerDim, color: colors.danger },
+      buttonSmall: { padding: '6px 12px', fontSize: '13px' },
+      input: { width: '100%', padding: '12px 14px', background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text, fontSize: '14px', fontFamily: "'Outfit', sans-serif", outline: 'none', boxSizing: 'border-box' },
+      select: { width: '100%', padding: '12px 14px', background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: '8px', color: colors.text, fontSize: '14px', fontFamily: "'Outfit', sans-serif", outline: 'none', cursor: 'pointer', boxSizing: 'border-box' },
+      label: { display: 'block', fontSize: '12px', fontWeight: '600', color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' },
+      formGroup: { marginBottom: '20px' },
+      modal: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
+      modalContent: { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '16px', padding: '32px', width: '600px', maxHeight: '90vh', overflowY: 'auto' },
+      modalTitle: { fontSize: '20px', fontWeight: '700', color: colors.text, marginBottom: '24px' },
+      emptyState: { textAlign: 'center', padding: '60px 20px', color: colors.textMuted },
+      row: { display: 'flex', gap: '12px', alignItems: 'center' },
+      monospace: { fontFamily: "'JetBrains Mono', monospace" },
+    };
+
+    // Badge
+    const Badge = ({ status }) => (
+      <span style={{ ...styles.badge, background: statusColors[status]?.bg || colors.infoDim, color: statusColors[status]?.text || colors.info }}>{status}</span>
+    );
+
+    // Modal
+    const Modal = ({ title, onClose, children }) => (
+      <div style={styles.modal} onClick={onClose}>
+        <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={styles.modalTitle}>{title}</h2>
+            <button style={{ ...styles.button, ...styles.buttonSecondary, padding: '8px' }} onClick={onClose}>✕</button>
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+
+    // Stone Form
+    const StoneForm = ({ stone, suppliers, onSave, onClose }) => {
+      const [form, setForm] = useState(stone || { carat: '', shape: 'Round', color: 'G', clarity: 'VS1', cut: 'Excellent', certification: 'GIA', cert_number: '', asking_price: '', cost_price: '', source: '', supplier_id: '', status: 'Available', notes: '' });
+      const handleSubmit = (e) => { e.preventDefault(); onSave({ ...form, carat: parseFloat(form.carat), asking_price: form.asking_price ? parseFloat(form.asking_price) : null, cost_price: form.cost_price ? parseFloat(form.cost_price) : null, supplier_id: form.supplier_id || null }); };
+      return (
+        <form onSubmit={handleSubmit}>
+          <div style={styles.grid3}>
+            <div style={styles.formGroup}><label style={styles.label}>Carat *</label><input type="number" step="0.01" style={styles.input} value={form.carat} onChange={e => setForm({ ...form, carat: e.target.value })} required /></div>
+            <div style={styles.formGroup}><label style={styles.label}>Shape</label><select style={styles.select} value={form.shape} onChange={e => setForm({ ...form, shape: e.target.value })}>{SHAPES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div style={styles.formGroup}><label style={styles.label}>Cut</label><select style={styles.select} value={form.cut} onChange={e => setForm({ ...form, cut: e.target.value })}>{CUTS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+          </div>
+          <div style={styles.grid3}>
+            <div style={styles.formGroup}><label style={styles.label}>Color</label><select style={styles.select} value={form.color} onChange={e => setForm({ ...form, color: e.target.value })}>{COLORS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+            <div style={styles.formGroup}><label style={styles.label}>Clarity</label><select style={styles.select} value={form.clarity} onChange={e => setForm({ ...form, clarity: e.target.value })}>{CLARITIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+            <div style={styles.formGroup}><label style={styles.label}>Certification</label><select style={styles.select} value={form.certification} onChange={e => setForm({ ...form, certification: e.target.value })}>{CERTIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+          </div>
+          <div style={styles.grid2}>
+            <div style={styles.formGroup}><label style={styles.label}>Cert Number</label><input type="text" style={styles.input} value={form.cert_number} onChange={e => setForm({ ...form, cert_number: e.target.value })} /></div>
+            <div style={styles.formGroup}><label style={styles.label}>Status</label><select style={styles.select} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>{STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+          </div>
+          <div style={styles.grid2}>
+            <div style={styles.formGroup}><label style={styles.label}>Cost Price ($)</label><input type="number" style={styles.input} value={form.cost_price} onChange={e => setForm({ ...form, cost_price: e.target.value })} /></div>
+            <div style={styles.formGroup}><label style={styles.label}>Asking Price ($)</label><input type="number" style={styles.input} value={form.asking_price} onChange={e => setForm({ ...form, asking_price: e.target.value })} /></div>
+          </div>
+          <div style={styles.grid2}>
+            <div style={styles.formGroup}><label style={styles.label}>Supplier</label><select style={styles.select} value={form.supplier_id} onChange={e => setForm({ ...form, supplier_id: e.target.value })}><option value="">Select...</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+            <div style={styles.formGroup}><label style={styles.label}>Source</label><input type="text" style={styles.input} value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} /></div>
+          </div>
+          <div style={styles.formGroup}><label style={styles.label}>Notes</label><textarea style={{ ...styles.input, minHeight: '80px', resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <button type="submit" style={{ ...styles.button, ...styles.buttonPrimary }}>{stone ? 'Update' : 'Add Stone'}</button>
+            <button type="button" style={{ ...styles.button, ...styles.buttonSecondary }} onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      );
+    };
+
+    // Contact Form
+    const ContactForm = ({ contact, onSave, onClose }) => {
+      const [form, setForm] = useState(contact || { name: '', company: '', type: 'Buyer', email: '', phone: '', location: '', preferences: '', notes: '' });
+      const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
+      return (
+        <form onSubmit={handleSubmit}>
+          <div style={styles.grid2}>
+            <div style={styles.formGroup}><label style={styles.label}>Name *</label><input type="text" style={styles.input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+            <div style={styles.formGroup}><label style={styles.label}>Company</label><input type="text" style={styles.input} value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
+          </div>
+          <div style={styles.grid3}>
+            <div style={styles.formGroup}><label style={styles.label}>Type</label><select style={styles.select} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>{CONTACT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+            <div style={styles.formGroup}><label style={styles.label}>Email</label><input type="email" style={styles.input} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+            <div style={styles.formGroup}><label style={styles.label}>Phone</label><input type="tel" style={styles.input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+          </div>
+          <div style={styles.formGroup}><label style={styles.label}>Location</label><input type="text" style={styles.input} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Preferences</label><input type="text" style={styles.input} value={form.preferences} onChange={e => setForm({ ...form, preferences: e.target.value })} placeholder="Round 1-2ct, D-F, VS+" /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Notes</label><textarea style={{ ...styles.input, minHeight: '80px', resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <button type="submit" style={{ ...styles.button, ...styles.buttonPrimary }}>{contact ? 'Update' : 'Add Contact'}</button>
+            <button type="button" style={{ ...styles.button, ...styles.buttonSecondary }} onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      );
+    };
+
+    // Main App
+    function App() {
+      const [page, setPage] = useState('dashboard');
+      const [stats, setStats] = useState(null);
+      const [stones, setStones] = useState([]);
+      const [contacts, setContacts] = useState([]);
+      const [deals, setDeals] = useState([]);
+      const [prices, setPrices] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [showStoneModal, setShowStoneModal] = useState(false);
+      const [showContactModal, setShowContactModal] = useState(false);
+      const [editingStone, setEditingStone] = useState(null);
+      const [editingContact, setEditingContact] = useState(null);
+      const [calc, setCalc] = useState({ cost_price: '', carat: '1', target_margin: '10', commission_percent: '3' });
+      const [calcResult, setCalcResult] = useState(null);
+
+      const loadData = useCallback(async () => {
+        try {
+          const [statsData, stonesData, contactsData, dealsData, pricesData] = await Promise.all([
+            api.get('/stats'), api.get('/stones'), api.get('/contacts'), api.get('/deals'), api.get('/prices')
+          ]);
+          setStats(statsData); setStones(stonesData); setContacts(contactsData); setDeals(dealsData); setPrices(pricesData);
+        } catch (err) { console.error(err); }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { loadData(); }, [loadData]);
+
+      const handleSaveStone = async (stone) => {
+        if (editingStone) await api.put(`/stones/${editingStone.id}`, stone);
+        else await api.post('/stones', stone);
+        setShowStoneModal(false); setEditingStone(null); loadData();
+      };
+
+      const handleDeleteStone = async (id) => { if (confirm('Delete?')) { await api.delete(`/stones/${id}`); loadData(); } };
+
+      const handleSaveContact = async (contact) => {
+        if (editingContact) await api.put(`/contacts/${editingContact.id}`, contact);
+        else await api.post('/contacts', contact);
+        setShowContactModal(false); setEditingContact(null); loadData();
+      };
+
+      const handleDeleteContact = async (id) => { if (confirm('Delete?')) { await api.delete(`/contacts/${id}`); loadData(); } };
+
+      const handleCalculate = async () => {
+        if (!calc.cost_price || !calc.carat) return;
+        const result = await api.post('/calculate', { cost_price: parseFloat(calc.cost_price), carat: parseFloat(calc.carat), target_margin: parseFloat(calc.target_margin), commission_percent: parseFloat(calc.commission_percent) });
+        setCalcResult(result);
+      };
+
+      const handleLogPrice = async (e) => {
+        e.preventDefault();
+        const f = e.target;
+        await api.post('/prices', { shape: f.shape.value, carat_min: parseFloat(f.carat_min.value), carat_max: parseFloat(f.carat_max.value || f.carat_min.value), color: f.color.value, clarity: f.clarity.value, price_per_carat: parseFloat(f.price_per_carat.value), source: f.source.value, notes: f.notes.value });
+        f.reset(); loadData();
+      };
+
+      const suppliers = contacts.filter(c => c.type === 'Supplier' || c.type === 'Both');
+
+      if (loading) return <div style={{ ...styles.container, alignItems: 'center', justifyContent: 'center' }}><div style={{ textAlign: 'center' }}><div style={{ fontSize: '48px', marginBottom: '16px' }}>💎</div><div style={{ color: colors.textMuted }}>Loading...</div></div></div>;
+
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'inventory', label: 'Inventory', icon: '💎' },
+        { id: 'contacts', label: 'Contacts', icon: '👥' },
+        { id: 'deals', label: 'Deals', icon: '🤝' },
+        { id: 'prices', label: 'Price Log', icon: '📈' },
+        { id: 'calculator', label: 'Calculator', icon: '🧮' },
+      ];
+
+      const renderDashboard = () => (
+        <React.Fragment>
+          <div style={styles.grid4}>
+            <div style={styles.statCard}><div style={styles.statLabel}>Inventory Value</div><div style={styles.statValue}>${(stats?.inventory?.available_value || 0).toLocaleString()}</div><div style={styles.statSub}>{stats?.inventory?.available || 0} available</div></div>
+            <div style={styles.statCard}><div style={styles.statLabel}>Active Deals</div><div style={styles.statValue}>{stats?.deals?.active || 0}</div><div style={styles.statSub}>{stats?.deals?.completed || 0} completed</div></div>
+            <div style={styles.statCard}><div style={styles.statLabel}>Commissions</div><div style={{ ...styles.statValue, color: colors.accent }}>${(stats?.deals?.total_commission || 0).toLocaleString()}</div></div>
+            <div style={styles.statCard}><div style={styles.statLabel}>Contacts</div><div style={styles.statValue}>{stats?.contacts?.total || 0}</div><div style={styles.statSub}>{stats?.contacts?.buyers || 0} buyers, {stats?.contacts?.suppliers || 0} suppliers</div></div>
+          </div>
+          <div style={styles.grid2}>
+            <div style={styles.card}><div style={styles.cardTitle}>💎 Recent Stones</div>
+              {stats?.recent_stones?.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Stone</th><th style={styles.th}>Price</th><th style={styles.th}>Status</th></tr></thead><tbody>{stats.recent_stones.map(s => <tr key={s.id}><td style={styles.td}><div style={{fontWeight:'500'}}>{s.carat}ct {s.shape}</div><div style={{fontSize:'12px',color:colors.textMuted}}>{s.color} {s.clarity}</div></td><td style={{...styles.td,...styles.monospace}}>${s.asking_price?.toLocaleString()||'—'}</td><td style={styles.td}><Badge status={s.status}/></td></tr>)}</tbody></table> : <div style={styles.emptyState}>No stones yet</div>}
+            </div>
+            <div style={styles.card}><div style={styles.cardTitle}>🤝 Recent Deals</div>
+              {stats?.recent_deals?.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Stone</th><th style={styles.th}>Buyer</th><th style={styles.th}>Status</th></tr></thead><tbody>{stats.recent_deals.map(d => <tr key={d.id}><td style={styles.td}><div style={{fontWeight:'500'}}>{d.carat}ct {d.shape}</div></td><td style={styles.td}>{d.buyer_name||'—'}</td><td style={styles.td}><Badge status={d.status}/></td></tr>)}</tbody></table> : <div style={styles.emptyState}>No deals yet</div>}
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      const renderInventory = () => (
+        <React.Fragment>
+          <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: colors.textMuted }}>{stones.length} stones</span>
+            <button style={{ ...styles.button, ...styles.buttonPrimary }} onClick={() => { setEditingStone(null); setShowStoneModal(true); }}>+ Add Stone</button>
+          </div>
+          <div style={styles.card}>
+            {stones.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Stone</th><th style={styles.th}>Specs</th><th style={styles.th}>Cost</th><th style={styles.th}>Asking</th><th style={styles.th}>Margin</th><th style={styles.th}>Status</th><th style={styles.th}>Actions</th></tr></thead><tbody>
+              {stones.map(s => { const m = s.cost_price && s.asking_price ? ((s.asking_price-s.cost_price)/s.cost_price*100).toFixed(1) : null; return (
+                <tr key={s.id}><td style={styles.td}><div style={{fontWeight:'600'}}>{s.carat}ct {s.shape}</div><div style={{fontSize:'12px',color:colors.textMuted}}>{s.source||'—'}</div></td><td style={styles.td}>{s.color}/{s.clarity}<br/><span style={{fontSize:'12px',color:colors.textMuted}}>{s.cut}</span></td><td style={{...styles.td,...styles.monospace}}>{s.cost_price?`$${s.cost_price.toLocaleString()}`:'—'}</td><td style={{...styles.td,...styles.monospace}}>{s.asking_price?`$${s.asking_price.toLocaleString()}`:'—'}</td><td style={{...styles.td,color:m>0?colors.accent:colors.textMuted}}>{m?`${m}%`:'—'}</td><td style={styles.td}><Badge status={s.status}/></td><td style={styles.td}><div style={styles.row}><button style={{...styles.button,...styles.buttonSecondary,...styles.buttonSmall}} onClick={()=>{setEditingStone(s);setShowStoneModal(true);}}>Edit</button><button style={{...styles.button,...styles.buttonDanger,...styles.buttonSmall}} onClick={()=>handleDeleteStone(s.id)}>Del</button></div></td></tr>
+              );})}
+            </tbody></table> : <div style={styles.emptyState}><div style={{fontSize:'48px',marginBottom:'16px'}}>💎</div><div style={{marginBottom:'16px'}}>No stones yet</div><button style={{...styles.button,...styles.buttonPrimary}} onClick={()=>setShowStoneModal(true)}>Add First Stone</button></div>}
+          </div>
+        </React.Fragment>
+      );
+
+      const renderContacts = () => (
+        <React.Fragment>
+          <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: colors.textMuted }}>{contacts.length} contacts</span>
+            <button style={{ ...styles.button, ...styles.buttonPrimary }} onClick={() => { setEditingContact(null); setShowContactModal(true); }}>+ Add Contact</button>
+          </div>
+          <div style={styles.card}>
+            {contacts.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Name</th><th style={styles.th}>Type</th><th style={styles.th}>Contact</th><th style={styles.th}>Preferences</th><th style={styles.th}>Actions</th></tr></thead><tbody>
+              {contacts.map(c => <tr key={c.id}><td style={styles.td}><div style={{fontWeight:'600'}}>{c.name}</div><div style={{fontSize:'12px',color:colors.textMuted}}>{c.company||''}</div></td><td style={styles.td}><Badge status={c.type}/></td><td style={styles.td}>{c.email||c.phone||'—'}</td><td style={{...styles.td,maxWidth:'200px',overflow:'hidden',textOverflow:'ellipsis'}}>{c.preferences||'—'}</td><td style={styles.td}><div style={styles.row}><button style={{...styles.button,...styles.buttonSecondary,...styles.buttonSmall}} onClick={()=>{setEditingContact(c);setShowContactModal(true);}}>Edit</button><button style={{...styles.button,...styles.buttonDanger,...styles.buttonSmall}} onClick={()=>handleDeleteContact(c.id)}>Del</button></div></td></tr>)}
+            </tbody></table> : <div style={styles.emptyState}><div style={{fontSize:'48px',marginBottom:'16px'}}>👥</div><div style={{marginBottom:'16px'}}>No contacts yet</div><button style={{...styles.button,...styles.buttonPrimary}} onClick={()=>setShowContactModal(true)}>Add First Contact</button></div>}
+          </div>
+        </React.Fragment>
+      );
+
+      const renderDeals = () => (
+        <div style={styles.card}>
+          {deals.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Stone</th><th style={styles.th}>Buyer</th><th style={styles.th}>Asking</th><th style={styles.th}>Final</th><th style={styles.th}>Commission</th><th style={styles.th}>Status</th></tr></thead><tbody>
+            {deals.map(d => <tr key={d.id}><td style={styles.td}>{d.carat}ct {d.shape}</td><td style={styles.td}>{d.buyer_name||'—'}</td><td style={{...styles.td,...styles.monospace}}>${d.asking_price?.toLocaleString()||'—'}</td><td style={{...styles.td,...styles.monospace,fontWeight:'600'}}>{d.final_price?`$${d.final_price.toLocaleString()}`:'—'}</td><td style={{...styles.td,...styles.monospace,color:colors.accent}}>{d.commission?`$${d.commission.toLocaleString()}`:'—'}</td><td style={styles.td}><Badge status={d.status}/></td></tr>)}
+          </tbody></table> : <div style={styles.emptyState}><div style={{fontSize:'48px',marginBottom:'16px'}}>🤝</div><div>No deals yet</div></div>}
+        </div>
+      );
+
+      const renderPrices = () => (
+        <div style={styles.grid2}>
+          <div style={styles.card}><div style={styles.cardTitle}>📝 Log Price</div>
+            <form onSubmit={handleLogPrice}>
+              <div style={styles.grid3}>
+                <div style={styles.formGroup}><label style={styles.label}>Shape</label><select name="shape" style={styles.select}>{SHAPES.map(s=><option key={s}>{s}</option>)}</select></div>
+                <div style={styles.formGroup}><label style={styles.label}>Carat Min</label><input name="carat_min" type="number" step="0.01" style={styles.input} required/></div>
+                <div style={styles.formGroup}><label style={styles.label}>Carat Max</label><input name="carat_max" type="number" step="0.01" style={styles.input}/></div>
+              </div>
+              <div style={styles.grid3}>
+                <div style={styles.formGroup}><label style={styles.label}>Color</label><select name="color" style={styles.select} defaultValue="G">{COLORS.map(c=><option key={c}>{c}</option>)}</select></div>
+                <div style={styles.formGroup}><label style={styles.label}>Clarity</label><select name="clarity" style={styles.select} defaultValue="VS1">{CLARITIES.map(c=><option key={c}>{c}</option>)}</select></div>
+                <div style={styles.formGroup}><label style={styles.label}>$/Carat</label><input name="price_per_carat" type="number" style={styles.input} required/></div>
+              </div>
+              <div style={styles.grid2}>
+                <div style={styles.formGroup}><label style={styles.label}>Source</label><input name="source" style={styles.input}/></div>
+                <div style={styles.formGroup}><label style={styles.label}>Notes</label><input name="notes" style={styles.input}/></div>
+              </div>
+              <button type="submit" style={{...styles.button,...styles.buttonPrimary}}>Log Price</button>
+            </form>
+          </div>
+          <div style={styles.card}><div style={styles.cardTitle}>📈 Recent Prices</div>
+            {prices.length > 0 ? <table style={styles.table}><thead><tr><th style={styles.th}>Profile</th><th style={styles.th}>$/ct</th><th style={styles.th}>Date</th></tr></thead><tbody>
+              {prices.slice(0,10).map(p=><tr key={p.id}><td style={styles.td}>{p.shape} {p.carat_min}ct {p.color} {p.clarity}</td><td style={{...styles.td,...styles.monospace,fontWeight:'600'}}>${p.price_per_carat.toLocaleString()}</td><td style={styles.td}>{p.date_logged}</td></tr>)}
+            </tbody></table> : <div style={styles.emptyState}>No prices logged</div>}
+          </div>
+        </div>
+      );
+
+      const renderCalculator = () => (
+        <div style={styles.grid2}>
+          <div style={styles.card}><div style={styles.cardTitle}>🧮 Calculator</div>
+            <div style={styles.grid2}>
+              <div style={styles.formGroup}><label style={styles.label}>Cost ($)</label><input type="number" style={styles.input} value={calc.cost_price} onChange={e=>setCalc({...calc,cost_price:e.target.value})}/></div>
+              <div style={styles.formGroup}><label style={styles.label}>Carat</label><input type="number" step="0.01" style={styles.input} value={calc.carat} onChange={e=>setCalc({...calc,carat:e.target.value})}/></div>
+            </div>
+            <div style={styles.grid2}>
+              <div style={styles.formGroup}><label style={styles.label}>Margin %</label><input type="number" style={styles.input} value={calc.target_margin} onChange={e=>setCalc({...calc,target_margin:e.target.value})}/></div>
+              <div style={styles.formGroup}><label style={styles.label}>Commission %</label><input type="number" style={styles.input} value={calc.commission_percent} onChange={e=>setCalc({...calc,commission_percent:e.target.value})}/></div>
+            </div>
+            <button style={{...styles.button,...styles.buttonPrimary,width:'100%'}} onClick={handleCalculate}>Calculate</button>
+          </div>
+          <div style={styles.card}><div style={styles.cardTitle}>💰 Results</div>
+            {calcResult ? <div>
+              <div style={{...styles.grid2,marginBottom:'20px'}}>
+                <div style={styles.statCard}><div style={styles.statLabel}>Sell Price</div><div style={styles.statValue}>${calcResult.sell_price.toLocaleString()}</div></div>
+                <div style={styles.statCard}><div style={styles.statLabel}>Gross Profit</div><div style={{...styles.statValue,color:colors.accent}}>${calcResult.profit.toLocaleString()}</div></div>
+              </div>
+              <div style={styles.grid2}>
+                <div style={styles.statCard}><div style={styles.statLabel}>Commission</div><div style={{...styles.statValue,fontSize:'22px',color:colors.warning}}>-${calcResult.commission.toLocaleString()}</div></div>
+                <div style={styles.statCard}><div style={styles.statLabel}>Net Profit</div><div style={{...styles.statValue,fontSize:'22px',color:colors.accent}}>${calcResult.net_profit.toLocaleString()}</div></div>
+              </div>
+            </div> : <div style={styles.emptyState}>Enter values and calculate</div>}
+          </div>
+        </div>
+      );
+
+      const pageTitle = { dashboard: 'Dashboard', inventory: 'Inventory', contacts: 'Contacts', deals: 'Deals', prices: 'Price Log', calculator: 'Calculator' };
+      const renderPage = () => { switch(page) { case 'inventory': return renderInventory(); case 'contacts': return renderContacts(); case 'deals': return renderDeals(); case 'prices': return renderPrices(); case 'calculator': return renderCalculator(); default: return renderDashboard(); }};
+
+      return (
+        <div style={styles.container}>
+          <aside style={styles.sidebar}>
+            <div style={styles.logo}>💎 Diamond<span style={styles.logoAccent}>Intel</span></div>
+            <nav style={styles.nav}>
+              {navItems.map(item => <button key={item.id} style={{...styles.navItem,...(page===item.id?styles.navItemActive:{})}} onClick={()=>setPage(item.id)}><span style={{fontSize:'16px'}}>{item.icon}</span> {item.label}</button>)}
+            </nav>
+          </aside>
+          <main style={styles.main}>
+            <header style={styles.header}><h1 style={styles.pageTitle}>{pageTitle[page]}</h1></header>
+            {renderPage()}
+          </main>
+          {showStoneModal && <Modal title={editingStone?'Edit Stone':'Add Stone'} onClose={()=>{setShowStoneModal(false);setEditingStone(null);}}><StoneForm stone={editingStone} suppliers={suppliers} onSave={handleSaveStone} onClose={()=>{setShowStoneModal(false);setEditingStone(null);}}/></Modal>}
+          {showContactModal && <Modal title={editingContact?'Edit Contact':'Add Contact'} onClose={()=>{setShowContactModal(false);setEditingContact(null);}}><ContactForm contact={editingContact} onSave={handleSaveContact} onClose={()=>{setShowContactModal(false);setEditingContact(null);}}/></Modal>}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
