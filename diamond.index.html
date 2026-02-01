@@ -1,1 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diamond Intel | Jan 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#0a0a0f;--card:#1a1a24;--diamond:#7dd3fc;--gold:#fbbf24;--emerald:#34d399;--rose:#fb7185;--violet:#a78bfa;--text:#f8fafc;--muted:#64748b;--border:rgba(255,255,255,0.06)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+nav{position:sticky;top:0;z-index:100;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(10,10,15,0.9)}
+.logo{display:flex;align-items:center;gap:0.75rem}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--diamond),var(--violet),var(--rose));clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.3rem;background:linear-gradient(135deg,var(--diamond),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.updated{font-size:0.65rem;color:var(--emerald);background:rgba(52,211,153,0.15);padding:0.25rem 0.5rem;border-radius:4px;margin-left:0.75rem}
+.tabs{display:flex;gap:0.25rem}
+.tab{padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit}
+.tab.active{background:rgba(125,211,252,0.15);color:var(--diamond)}
+main{padding:1.5rem 2rem;max-width:1300px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.card{background:linear-gradient(145deg,rgba(26,26,36,0.9),rgba(18,18,26,0.95));border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.card h2{font-family:'Playfair Display',serif;font-size:1.1rem;margin-bottom:0.2rem}
+.card p{font-size:0.7rem;color:var(--muted);margin-bottom:1rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem}
+.form-group select,.form-group input{width:100%;padding:0.6rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:0.85rem}
+.form-group select option{background:var(--card)}
+.btn{padding:0.6rem 1.2rem;border-radius:6px;font-weight:500;font-size:0.8rem;cursor:pointer;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--diamond),var(--violet));color:var(--bg)}
+.result{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:1.5rem;text-align:center}
+.result-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.result-value{font-family:'Playfair Display',serif;font-size:2.5rem;color:var(--emerald);margin:0.5rem 0}
+.result-detail{font-size:0.8rem;color:#94a3b8}
+.breakdown{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+.breakdown-row{display:flex;justify-content:space-between;padding:0.3rem 0;font-size:0.75rem}
+.breakdown-row span:first-child{color:var(--muted)}
+.breakdown-row span:last-child{font-family:'JetBrains Mono',monospace}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem}
+.compare-card{padding:0.75rem;border-radius:8px;text-align:center}
+.compare-card.nat{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)}
+.compare-card.lab{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2)}
+.compare-card h4{font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem}
+.compare-card.nat h4{color:var(--gold)}
+.compare-card.lab h4{color:var(--violet)}
+.compare-card .price{font-family:'Playfair Display',serif;font-size:1.3rem}
+.price-grid{width:100%;border-collapse:collapse;font-size:0.7rem}
+.price-grid th,.price-grid td{padding:0.4rem;text-align:center;border:1px solid var(--border)}
+.price-grid th{color:var(--diamond);background:rgba(125,211,252,0.1)}
+.price-grid td{font-family:'JetBrains Mono',monospace}
+.price-grid td:first-child{background:rgba(167,139,250,0.05);color:var(--violet);font-family:'DM Sans',sans-serif}
+.price-grid td:not(:first-child):hover{background:rgba(125,211,252,0.15);cursor:pointer}
+.note{margin-top:1rem;padding:0.6rem;background:rgba(251,191,36,0.1);border-radius:6px;font-size:0.7rem;color:#94a3b8}
+.note strong{color:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem}
+.stat{background:rgba(255,255,255,0.03);border-radius:8px;padding:0.75rem;text-align:center}
+.stat-label{font-size:0.6rem;color:var(--muted);text-transform:uppercase}
+.stat-value{font-family:'Playfair Display',serif;font-size:1.2rem;margin:0.2rem 0}
+.stat-change{font-size:0.65rem}
+.chart-box{height:260px}
+.demand-item{display:flex;align-items:center;gap:0.6rem;padding:0.6rem;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:0.5rem}
+.demand-rank{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:0.7rem;font-weight:600;background:rgba(125,211,252,0.15);color:var(--diamond)}
+.demand-info h4{font-size:0.8rem;margin-bottom:0.1rem}
+.demand-info span{font-size:0.65rem;color:var(--muted)}
+.demand-bar{width:50px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-left:auto}
+.demand-fill{height:100%;background:linear-gradient(90deg,var(--diamond),var(--violet));border-radius:3px}
+.deal-result{padding:1.25rem;border-radius:12px;text-align:center}
+.deal-result.good{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3)}
+.deal-result.fair{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3)}
+.deal-result.bad{background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3)}
+.verdict{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:0.4rem}
+.deal-result.good .verdict{color:var(--emerald)}
+.deal-result.fair .verdict{color:var(--gold)}
+.deal-result.bad .verdict{color:var(--rose)}
+.deal-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;text-align:left}
+.deal-item{padding:0.6rem;background:rgba(255,255,255,0.03);border-radius:6px}
+.deal-item h5{font-size:0.6rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem}
+.deal-item .val{font-family:'JetBrains Mono',monospace;font-size:1rem}
+.inv-table{width:100%;border-collapse:collapse}
+.inv-table th{text-align:left;padding:0.6rem;font-size:0.6rem;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.inv-table td{padding:0.6rem;border-bottom:1px solid var(--border);font-size:0.75rem}
+.badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:10px;font-size:0.6rem}
+.badge.watching{background:rgba(125,211,252,0.15);color:var(--diamond)}
+.badge.owned{background:rgba(52,211,153,0.15);color:var(--emerald)}
+.profit{font-family:'JetBrains Mono',monospace}
+.profit.pos{color:var(--emerald)}
+.profit.neg{color:var(--rose)}
+.empty{text-align:center;padding:2rem;color:var(--muted)}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;justify-content:center;align-items:center}
+.modal-bg.active{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;max-width:400px;width:90%}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.modal-head h3{font-family:'Playfair Display',serif;font-size:1rem}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer}
+footer{padding:1rem 2rem;border-top:1px solid var(--border);text-align:center;font-size:0.65rem;color:var(--muted)}
+footer a{color:var(--diamond);text-decoration:none}
+@media(max-width:800px){.grid2,.compare,.deal-grid,.stats{grid-template-columns:1fr}.tabs,.updated{display:none}}
+</style>
+</head>
+<body>
+<nav>
+<div class="logo"><div class="logo-icon"></div><h1>Diamond Intel</h1><span class="updated">📅 Jan 30, 2026</span></div>
+<div class="tabs">
+<button class="tab active" data-page="calculator">💎 Calculator</button>
+<button class="tab" data-page="rapgrid">📊 Prices</button>
+<button class="tab" data-page="trends">📈 Trends</button>
+<button class="tab" data-page="analyzer">🔍 Analyzer</button>
+<button class="tab" data-page="inventory">📦 Inventory</button>
+</div>
+</nav>
+<main>
+<div id="calculator" class="page active">
+<div class="card">
+<h2>Diamond Price Calculator</h2>
+<p>Rapaport prices updated Jan 30, 2026 • Market discount: 32% • Sources: StoneAlgo, ABlueDiamond</p>
+<div class="grid2">
+<div>
+<div class="grid2">
+<div class="form-group"><label>Shape</label><select id="calc-shape"><option value="round">Round</option><option value="oval">Oval</option><option value="cushion">Cushion</option><option value="princess">Princess</option><option value="emerald">Emerald</option><option value="pear">Pear</option></select></div>
+<div class="form-group"><label>Carat</label><input type="number" id="calc-carat" value="1.00" min="0.2" max="10" step="0.01"></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Color</label><select id="calc-color"><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G" selected>G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option><option value="K">K</option></select></div>
+<div class="form-group"><label>Clarity</label><select id="calc-clarity"><option value="IF">IF</option><option value="VVS1">VVS1</option><option value="VVS2">VVS2</option><option value="VS1" selected>VS1</option><option value="VS2">VS2</option><option value="SI1">SI1</option><option value="SI2">SI2</option><option value="I1">I1</option></select></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Cut</label><select id="calc-cut"><option value="ex" selected>Excellent</option><option value="vg">Very Good</option><option value="gd">Good</option></select></div>
+<div class="form-group"><label>Type</label><select id="calc-type"><option value="natural">Natural</option><option value="lab">Lab-Grown</option></select></div>
+</div>
+<button class="btn btn-primary" onclick="calc()" style="width:100%">Calculate Price</button>
+</div>
+<div>
+<div class="result">
+<div class="result-label">Estimated Retail</div>
+<div class="result-value" id="res-price">$4,340</div>
+<div class="result-detail" id="res-ppc">$4,340/ct</div>
+<div class="breakdown">
+<div class="breakdown-row"><span>Rap Base</span><span id="bd-rap">$6,600/ct</span></div>
+<div class="breakdown-row"><span>Market Disc</span><span>-32%</span></div>
+<div class="breakdown-row"><span>Shape Mod</span><span id="bd-shape">+0%</span></div>
+<div class="breakdown-row"><span>Cut Adj</span><span id="bd-cut">+3%</span></div>
+</div>
+</div>
+<div class="compare">
+<div class="compare-card nat"><h4>Natural</h4><div class="price" id="nat-p">$4,340</div></div>
+<div class="compare-card lab"><h4>Lab-Grown</h4><div class="price" id="lab-p">$780</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
+<div id="rapgrid" class="page">
+<div class="card">
+<h2>Rapaport Price Grid</h2>
+<p>USD per carat • Jan 30, 2026 • Actual market trades at -30% to -34%</p>
+<div class="grid2" style="margin-bottom:1rem">
+<div class="form-group" style="margin:0"><label>Shape</label><select id="rap-shape" onchange="updateGrid()"><option value="round">Round</option><option value="fancy">Fancy</option></select></div>
+<div class="form-group" style="margin:0"><label>Carat</label><select id="rap-ct" onchange="updateGrid()"><option value="0.50">0.50-0.69</option><option value="0.90">0.90-0.99</option><option value="1.00" selected>1.00-1.49</option><option value="1.50">1.50-1.99</option><option value="2.00">2.00-2.99</option><option value="3.00">3.00+</option></select></div>
+</div>
+<div class="price-grid-container"><table class="price-grid" id="grid"></table></div>
+<div class="note"><strong>Note:</strong> Click any cell to use in calculator. These are asking prices — market trades 30-34% below.</div>
+</div>
+</div>
+
+<div id="trends" class="page">
+<div class="stats">
+<div class="stat"><div class="stat-label">1ct Round Avg</div><div class="stat-value" style="color:var(--emerald)">$5,083</div><div class="stat-change" style="color:var(--emerald)">↑ +0.71%</div></div>
+<div class="stat"><div class="stat-label">Market</div><div class="stat-value" style="color:var(--diamond)">Stable</div><div class="stat-change" style="color:var(--muted)">Slight up</div></div>
+<div class="stat"><div class="stat-label">Lab Gap</div><div class="stat-value" style="color:var(--violet)">-82%</div><div class="stat-change" style="color:var(--emerald)">Lab +12%</div></div>
+<div class="stat"><div class="stat-label">Hot Shape</div><div class="stat-value" style="color:var(--gold)">Oval</div><div class="stat-change" style="color:var(--emerald)">↑ +18% YoY</div></div>
+</div>
+<div class="grid2">
+<div class="card"><h2>Price Trend (1ct G VS1)</h2><p>12-month • Natural vs Lab-Grown</p><div class="chart-box"><canvas id="chart"></canvas></div></div>
+<div class="card"><h2>Demand by Shape</h2><p>Current market interest</p>
+<div class="demand-item"><span class="demand-rank">1</span><div class="demand-info"><h4>Round</h4><span>Always #1</span></div><div class="demand-bar"><div class="demand-fill" style="width:95%"></div></div></div>
+<div class="demand-item"><span class="demand-rank">2</span><div class="demand-info"><h4>Oval</h4><span>Trending ↑</span></div><div class="demand-bar"><div class="demand-fill" style="width:85%"></div></div></div>
+<div class="demand-item"><span class="demand-rank">3</span><div class="demand-info"><h4>Cushion</h4><span>Steady</span></div><div class="demand-bar"><div class="demand-fill" style="width:65%"></div></div></div>
+<div class="demand-item"><span class="demand-rank">4</span><div class="demand-info"><h4>Emerald</h4><span>Growing</span></div><div class="demand-bar"><div class="demand-fill" style="width:48%"></div></div></div>
+<div class="demand-item"><span class="demand-rank">5</span><div class="demand-info"><h4>Princess</h4><span>Declining</span></div><div class="demand-bar"><div class="demand-fill" style="width:40%"></div></div></div>
+</div>
+</div>
+</div>
+
+<div id="analyzer" class="page">
+<div class="card">
+<h2>Deal Analyzer</h2>
+<p>Check if a stone is fairly priced</p>
+<div class="grid2">
+<div>
+<div class="grid2">
+<div class="form-group"><label>Shape</label><select id="d-shape"><option value="round">Round</option><option value="oval">Oval</option><option value="cushion">Cushion</option><option value="princess">Princess</option><option value="emerald">Emerald</option><option value="pear">Pear</option></select></div>
+<div class="form-group"><label>Carat</label><input type="number" id="d-ct" value="1.00" min="0.2" step="0.01"></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Color</label><select id="d-col"><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G" selected>G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option></select></div>
+<div class="form-group"><label>Clarity</label><select id="d-cla"><option value="IF">IF</option><option value="VVS1">VVS1</option><option value="VVS2">VVS2</option><option value="VS1" selected>VS1</option><option value="VS2">VS2</option><option value="SI1">SI1</option><option value="SI2">SI2</option></select></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Asking $</label><input type="number" id="d-ask" value="4200" min="100" step="100"></div>
+<div class="form-group"><label>Type</label><select id="d-type"><option value="natural">Natural</option><option value="lab">Lab</option></select></div>
+</div>
+<button class="btn btn-primary" onclick="analyze()" style="width:100%">Analyze</button>
+</div>
+<div>
+<div class="deal-result good" id="deal-res">
+<div class="verdict" id="verdict">Good Deal</div>
+<p style="color:#94a3b8;font-size:0.8rem" id="explain">Below fair value</p>
+<div class="deal-grid">
+<div class="deal-item"><h5>Asking</h5><div class="val" id="d-asking">$4,200</div></div>
+<div class="deal-item"><h5>Fair Value</h5><div class="val" id="d-fair">$4,340</div></div>
+<div class="deal-item"><h5>Per Carat</h5><div class="val" id="d-ppc">$4,200</div></div>
+<div class="deal-item"><h5>Rap %</h5><div class="val" id="d-rap">-36%</div></div>
+</div>
+</div>
+<button class="btn" style="width:100%;margin-top:0.75rem;background:rgba(125,211,252,0.1);color:var(--diamond);border:1px solid var(--diamond)" onclick="addInv()">+ Add to Watchlist</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="inventory" class="page">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+<div><h2>My Inventory</h2><p style="margin:0">Track stones you're watching or own</p></div>
+<button class="btn btn-primary" onclick="openModal()">+ Add</button>
+</div>
+<div id="empty-inv" class="empty"><p>No stones yet. Use Analyzer or Add.</p></div>
+<table class="inv-table" id="inv-table" style="display:none">
+<thead><tr><th>Stone</th><th>Specs</th><th>Cost</th><th>Fair</th><th>Status</th><th>P/L</th><th></th></tr></thead>
+<tbody id="inv-body"></tbody>
+</table>
+</div>
+</div>
+</main>
+
+<div class="modal-bg" id="modal">
+<div class="modal">
+<div class="modal-head"><h3>Add Stone</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+<div class="grid2">
+<div class="form-group"><label>Shape</label><select id="m-shape"><option value="round">Round</option><option value="oval">Oval</option><option value="cushion">Cushion</option></select></div>
+<div class="form-group"><label>Carat</label><input type="number" id="m-ct" value="1.00" step="0.01"></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Color</label><select id="m-col"><option value="G" selected>G</option><option value="H">H</option><option value="I">I</option></select></div>
+<div class="form-group"><label>Clarity</label><select id="m-cla"><option value="VS1" selected>VS1</option><option value="VS2">VS2</option><option value="SI1">SI1</option></select></div>
+</div>
+<div class="grid2">
+<div class="form-group"><label>Cost $</label><input type="number" id="m-cost" value="4200"></div>
+<div class="form-group"><label>Status</label><select id="m-status"><option value="watching">Watching</option><option value="owned">Owned</option></select></div>
+</div>
+<button class="btn btn-primary" onclick="saveStone()" style="width:100%">Save</button>
+</div>
+</div>
+
+<footer>
+<p>Diamond Intel v2.1 | Updated: Jan 30, 2026 | Next: Friday after Rapaport publishes</p>
+<p>Sources: <a href="https://stonealgo.com" target="_blank">StoneAlgo</a> • <a href="https://abluediamond.com/education/diamond-price/" target="_blank">ABlueDiamond</a></p>
+</footer>
+
+<script>
+// RAPAPORT PRICES - JAN 30, 2026
+const RAP={
+"0.50":{D:{IF:4800,VVS1:4100,VVS2:3600,VS1:3200,VS2:2900,SI1:2500,SI2:2100,I1:1500},E:{IF:4300,VVS1:3700,VVS2:3300,VS1:2900,VS2:2600,SI1:2200,SI2:1850,I1:1350},F:{IF:3900,VVS1:3400,VVS2:3000,VS1:2700,VS2:2400,SI1:2000,SI2:1700,I1:1250},G:{IF:3500,VVS1:3100,VVS2:2700,VS1:2450,VS2:2200,SI1:1850,SI2:1550,I1:1150},H:{IF:3100,VVS1:2800,VVS2:2500,VS1:2250,VS2:2000,SI1:1700,SI2:1450,I1:1050},I:{IF:2700,VVS1:2450,VVS2:2200,VS1:1950,VS2:1750,SI1:1500,SI2:1300,I1:950},J:{IF:2400,VVS1:2150,VVS2:1950,VS1:1750,VS2:1550,SI1:1350,SI2:1150,I1:850},K:{IF:2100,VVS1:1900,VVS2:1700,VS1:1500,VS2:1350,SI1:1150,SI2:1000,I1:750}},
+"0.90":{D:{IF:9200,VVS1:7600,VVS2:6400,VS1:5600,VS2:5000,SI1:4200,SI2:3500,I1:2400},E:{IF:8200,VVS1:6800,VVS2:5800,VS1:5100,VS2:4500,SI1:3800,SI2:3200,I1:2200},F:{IF:7400,VVS1:6200,VVS2:5300,VS1:4700,VS2:4200,SI1:3500,SI2:2900,I1:2000},G:{IF:6600,VVS1:5600,VVS2:4900,VS1:4300,VS2:3850,SI1:3200,SI2:2700,I1:1900},H:{IF:5800,VVS1:5000,VVS2:4400,VS1:3900,VS2:3500,SI1:2950,SI2:2500,I1:1750},I:{IF:5000,VVS1:4400,VVS2:3900,VS1:3450,VS2:3100,SI1:2650,SI2:2250,I1:1600},J:{IF:4400,VVS1:3900,VVS2:3500,VS1:3100,VS2:2800,SI1:2400,SI2:2050,I1:1450},K:{IF:3800,VVS1:3400,VVS2:3050,VS1:2750,VS2:2450,SI1:2100,SI2:1800,I1:1300}},
+"1.00":{D:{IF:15500,VVS1:12500,VVS2:10200,VS1:8800,VS2:7800,SI1:6300,SI2:5200,I1:3500},E:{IF:13500,VVS1:10800,VVS2:9100,VS1:7900,VS2:7000,SI1:5700,SI2:4700,I1:3200},F:{IF:11800,VVS1:9600,VVS2:8300,VS1:7200,VS2:6400,SI1:5200,SI2:4300,I1:3000},G:{IF:10200,VVS1:8600,VVS2:7500,VS1:6600,VS2:5900,SI1:4800,SI2:4000,I1:2800},H:{IF:8800,VVS1:7600,VVS2:6700,VS1:5900,VS2:5300,SI1:4400,SI2:3700,I1:2600},I:{IF:7500,VVS1:6500,VVS2:5800,VS1:5200,VS2:4650,SI1:3900,SI2:3300,I1:2300},J:{IF:6500,VVS1:5700,VVS2:5100,VS1:4550,VS2:4100,SI1:3500,SI2:3000,I1:2100},K:{IF:5500,VVS1:4900,VVS2:4400,VS1:3950,VS2:3550,SI1:3050,SI2:2600,I1:1850}},
+"1.50":{D:{IF:19500,VVS1:15800,VVS2:13000,VS1:11200,VS2:9800,SI1:8000,SI2:6600,I1:4500},E:{IF:17200,VVS1:14000,VVS2:11800,VS1:10200,VS2:9000,SI1:7300,SI2:6000,I1:4100},F:{IF:15000,VVS1:12400,VVS2:10700,VS1:9300,VS2:8200,SI1:6700,SI2:5500,I1:3800},G:{IF:13000,VVS1:11000,VVS2:9600,VS1:8500,VS2:7500,SI1:6200,SI2:5100,I1:3600},H:{IF:11200,VVS1:9600,VVS2:8500,VS1:7600,VS2:6700,SI1:5600,SI2:4700,I1:3300},I:{IF:9600,VVS1:8400,VVS2:7500,VS1:6650,VS2:5900,SI1:5000,SI2:4200,I1:2900},J:{IF:8400,VVS1:7400,VVS2:6600,VS1:5900,VS2:5250,SI1:4450,SI2:3800,I1:2650},K:{IF:7200,VVS1:6400,VVS2:5700,VS1:5100,VS2:4550,SI1:3900,SI2:3350,I1:2350}},
+"2.00":{D:{IF:30000,VVS1:24000,VVS2:19500,VS1:16800,VS2:14600,SI1:11800,SI2:9700,I1:6500},E:{IF:27000,VVS1:21500,VVS2:17800,VS1:15200,VS2:13200,SI1:10800,SI2:8800,I1:6000},F:{IF:24000,VVS1:19500,VVS2:16200,VS1:14000,VS2:12200,SI1:10000,SI2:8100,I1:5500},G:{IF:20500,VVS1:17200,VVS2:14500,VS1:12700,VS2:11000,SI1:9200,SI2:7500,I1:5100},H:{IF:17800,VVS1:15200,VVS2:13000,VS1:11400,VS2:10000,SI1:8400,SI2:6900,I1:4700},I:{IF:15200,VVS1:13000,VVS2:11400,VS1:10000,VS2:8700,SI1:7300,SI2:6100,I1:4200},J:{IF:13000,VVS1:11400,VVS2:10000,VS1:8700,VS2:7600,SI1:6500,SI2:5500,I1:3800},K:{IF:11000,VVS1:9700,VVS2:8600,VS1:7500,VS2:6600,SI1:5600,SI2:4800,I1:3300}},
+"3.00":{D:{IF:45000,VVS1:36000,VVS2:29500,VS1:25000,VS2:21500,SI1:17500,SI2:14200,I1:9500},E:{IF:40500,VVS1:32500,VVS2:27000,VS1:23000,VS2:19800,SI1:16000,SI2:13000,I1:8700},F:{IF:36500,VVS1:29500,VVS2:25000,VS1:21200,VS2:18500,SI1:15000,SI2:12200,I1:8000},G:{IF:32500,VVS1:26500,VVS2:22800,VS1:19500,VS2:17000,SI1:14000,SI2:11400,I1:7500},H:{IF:28500,VVS1:24000,VVS2:20500,VS1:17800,VS2:15500,SI1:12800,SI2:10500,I1:7000},I:{IF:24500,VVS1:21000,VVS2:18000,VS1:15800,VS2:13800,SI1:11400,SI2:9400,I1:6300},J:{IF:21000,VVS1:18200,VVS2:16000,VS1:14000,VS2:12200,SI1:10200,SI2:8500,I1:5700},K:{IF:18000,VVS1:15800,VVS2:14000,VS1:12200,VS2:10700,SI1:9000,SI2:7600,I1:5100}}
+};
+const SHAPE={round:1,oval:0.80,cushion:0.75,princess:0.72,emerald:0.70,pear:0.73};
+const CUT={ex:1.03,vg:1,gd:0.92};
+const DISC=0.68,LAB=0.18;
+let inv=JSON.parse(localStorage.getItem('inv'))||[];
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+t.classList.add('active');
+document.getElementById(t.dataset.page).classList.add('active');
+});
+
+function getRap(ct,col,cla){
+let r=ct<0.7?"0.50":ct<1?"0.90":ct<1.5?"1.00":ct<2?"1.50":ct<3?"2.00":"3.00";
+let c=cla==="FL"?"IF":cla;
+return RAP[r]?.[col]?.[c]||6000;
+}
+
+function calc(){
+let sh=document.getElementById('calc-shape').value;
+let ct=parseFloat(document.getElementById('calc-carat').value);
+let col=document.getElementById('calc-color').value;
+let cla=document.getElementById('calc-clarity').value;
+let cut=document.getElementById('calc-cut').value;
+let typ=document.getElementById('calc-type').value;
+let rap=getRap(ct,col,cla);
+let sm=SHAPE[sh]||1,cm=CUT[cut]||1;
+let ppc=rap*sm*cm*DISC;
+let tot=ppc*ct;
+let labPpc=ppc*LAB,labTot=labPpc*ct;
+if(typ==='natural'){
+document.getElementById('res-price').textContent='$'+Math.round(tot).toLocaleString();
+document.getElementById('res-ppc').textContent='$'+Math.round(ppc).toLocaleString()+'/ct';
+}else{
+document.getElementById('res-price').textContent='$'+Math.round(labTot).toLocaleString();
+document.getElementById('res-ppc').textContent='$'+Math.round(labPpc).toLocaleString()+'/ct';
+}
+document.getElementById('bd-rap').textContent='$'+rap.toLocaleString()+'/ct';
+document.getElementById('bd-shape').textContent=sm===1?'+0%':Math.round((sm-1)*100)+'%';
+document.getElementById('bd-cut').textContent=cm===1?'+0%':'+'+Math.round((cm-1)*100)+'%';
+document.getElementById('nat-p').textContent='$'+Math.round(tot).toLocaleString();
+document.getElementById('lab-p').textContent='$'+Math.round(labTot).toLocaleString();
+}
+
+function updateGrid(){
+let sh=document.getElementById('rap-shape').value;
+let ct=document.getElementById('rap-ct').value;
+let cols=['D','E','F','G','H','I','J','K'];
+let clas=['IF','VVS1','VVS2','VS1','VS2','SI1','SI2','I1'];
+let sm=sh==='round'?1:0.75;
+let d=RAP[ct]||RAP["1.00"];
+let h='<thead><tr><th></th>';
+clas.forEach(c=>h+='<th>'+c+'</th>');
+h+='</tr></thead><tbody>';
+cols.forEach(col=>{
+h+='<tr><td>'+col+'</td>';
+clas.forEach(cl=>{
+let p=d[col]?.[cl]?Math.round(d[col][cl]*sm):0;
+h+='<td onclick="usePr(\''+col+'\',\''+cl+'\')">'+p.toLocaleString()+'</td>';
+});
+h+='</tr>';
+});
+h+='</tbody>';
+document.getElementById('grid').innerHTML=h;
+}
+
+function usePr(col,cla){
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+document.querySelector('[data-page="calculator"]').classList.add('active');
+document.getElementById('calculator').classList.add('active');
+document.getElementById('calc-color').value=col;
+document.getElementById('calc-clarity').value=cla;
+calc();
+}
+
+function analyze(){
+let sh=document.getElementById('d-shape').value;
+let ct=parseFloat(document.getElementById('d-ct').value);
+let col=document.getElementById('d-col').value;
+let cla=document.getElementById('d-cla').value;
+let ask=parseFloat(document.getElementById('d-ask').value);
+let typ=document.getElementById('d-type').value;
+let rap=getRap(ct,col,cla);
+let sm=SHAPE[sh]||1;
+let fairPpc=rap*sm*DISC;
+if(typ==='lab')fairPpc*=LAB;
+let fairTot=fairPpc*ct;
+let askPpc=ask/ct;
+let diff=((ask-fairTot)/fairTot)*100;
+let rapD=((rap-askPpc)/rap)*100;
+document.getElementById('d-asking').textContent='$'+ask.toLocaleString();
+document.getElementById('d-fair').textContent='$'+Math.round(fairTot).toLocaleString();
+document.getElementById('d-ppc').textContent='$'+Math.round(askPpc).toLocaleString();
+document.getElementById('d-rap').textContent='-'+Math.round(rapD)+'%';
+let el=document.getElementById('deal-res');
+let v=document.getElementById('verdict');
+let exp=document.getElementById('explain');
+el.classList.remove('good','fair','bad');
+if(diff<=-8){el.classList.add('good');v.textContent='🎯 Great Deal';exp.textContent='Priced '+Math.abs(Math.round(diff))+'% below fair value!';}
+else if(diff<=5){el.classList.add('fair');v.textContent='👍 Fair Price';exp.textContent='Within '+Math.abs(Math.round(diff))+'% of fair value.';}
+else{el.classList.add('bad');v.textContent='⚠️ Overpriced';exp.textContent='Priced '+Math.round(diff)+'% above fair value.';}
+window.curDeal={sh,ct,col,cla,ask,fairTot,typ};
+}
+
+function addInv(){
+if(!window.curDeal){alert('Analyze first');return;}
+let d=window.curDeal;
+inv.push({id:Date.now(),sh:d.sh,ct:d.ct,col:d.col,cla:d.cla,cost:d.ask,fair:Math.round(d.fairTot),typ:d.typ,status:'watching'});
+saveInv();renderInv();alert('Added!');
+}
+
+function openModal(){document.getElementById('modal').classList.add('active');}
+function closeModal(){document.getElementById('modal').classList.remove('active');}
+
+function saveStone(){
+let sh=document.getElementById('m-shape').value;
+let ct=parseFloat(document.getElementById('m-ct').value);
+let col=document.getElementById('m-col').value;
+let cla=document.getElementById('m-cla').value;
+let cost=parseFloat(document.getElementById('m-cost').value);
+let status=document.getElementById('m-status').value;
+let rap=getRap(ct,col,cla);
+let sm=SHAPE[sh]||1;
+let fair=Math.round(rap*sm*DISC*ct);
+inv.push({id:Date.now(),sh,ct,col,cla,cost,fair,typ:'natural',status});
+saveInv();renderInv();closeModal();
+}
+
+function saveInv(){localStorage.setItem('inv',JSON.stringify(inv));}
+function delStone(id){inv=inv.filter(s=>s.id!==id);saveInv();renderInv();}
+
+function renderInv(){
+let empty=document.getElementById('empty-inv');
+let tbl=document.getElementById('inv-table');
+let body=document.getElementById('inv-body');
+if(inv.length===0){empty.style.display='block';tbl.style.display='none';return;}
+empty.style.display='none';tbl.style.display='table';
+body.innerHTML=inv.map(s=>{
+let pl=s.fair-s.cost;
+let pct=((pl/s.cost)*100).toFixed(1);
+let cls=pl>=0?'pos':'neg';
+let sign=pl>=0?'+':'';
+return '<tr><td><strong>'+s.ct+'ct '+s.sh.charAt(0).toUpperCase()+s.sh.slice(1)+'</strong></td><td>'+s.col+'/'+s.cla+'</td><td style="font-family:JetBrains Mono">$'+s.cost.toLocaleString()+'</td><td style="font-family:JetBrains Mono">$'+s.fair.toLocaleString()+'</td><td><span class="badge '+s.status+'">'+s.status+'</span></td><td class="profit '+cls+'">'+sign+'$'+Math.abs(pl).toLocaleString()+' ('+sign+pct+'%)</td><td><button onclick="delStone('+s.id+')" style="background:none;border:none;color:var(--rose);cursor:pointer">×</button></td></tr>';
+}).join('');
+}
+
+function initChart(){
+let ctx=document.getElementById('chart').getContext('2d');
+let labels=['Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan'];
+let nat=[4180,4150,4120,4080,4100,4150,4200,4250,4280,4320,4350,4380];
+let lab=[1100,1050,1000,950,900,850,820,800,780,760,750,840];
+new Chart(ctx,{type:'line',data:{labels,datasets:[
+{label:'Natural',data:nat,borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,0.1)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
+{label:'Lab',data:lab,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,0.1)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10},callback:v=>'$'+v.toLocaleString()}}}}});
+}
+
+document.addEventListener('DOMContentLoaded',()=>{calc();updateGrid();initChart();renderInv();analyze();});
+document.getElementById('modal').onclick=e=>{if(e.target.classList.contains('modal-bg'))closeModal();};
+</script>
+</body>
+</html>
